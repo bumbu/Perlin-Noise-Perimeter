@@ -59,7 +59,7 @@ var processing = new Processing()
 
 paper.setup(canvas);
 
-paper.project.importSVG('http://localhost/perlin-perimeter/images/fish.svg', function() {
+paper.project.importSVG('images/fish.svg', function() {
   paper.view.draw();
 
   // Remove svg children
