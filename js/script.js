@@ -5,6 +5,7 @@
 var RenderConfig = {
   updateOnEachChange: false
 , renderOnCanvas: false
+, zoom: 1
 
 , noiseOctaves: 8
 , noiseFalloff: 0.44
@@ -35,6 +36,9 @@ function onFinishChange() {
   render()
 }
 
+function onZoomUpdate() {
+  paper.view.zoom = RenderConfig.zoom
+}
 
 $('#file-input').on('change', function(ev) {
   var reader = new FileReader()
@@ -50,6 +54,7 @@ $('#file-input').on('change', function(ev) {
 var gui = new dat.GUI()
 gui.add(RenderConfig, 'updateOnEachChange')
 gui.add(RenderConfig, 'renderOnCanvas').onFinishChange(onFinishChange)
+gui.add(RenderConfig, 'zoom').min(0.01).max(5).step(0.01).onFinishChange(onZoomUpdate)
 
 // Noise
 var f1 = gui.addFolder('Noise');
