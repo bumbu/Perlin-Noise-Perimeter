@@ -19,6 +19,10 @@ var RenderConfig = {
 , addFile: function() {
     $('#file-input').click()
   }
+, export: function() {
+    exportSVG()
+  }
+, name: 'demo.svg'
 }
 
 function onConfigChange() {
@@ -46,7 +50,6 @@ $('#file-input').on('change', function(ev) {
 var gui = new dat.GUI()
 gui.add(RenderConfig, 'updateOnEachChange')
 gui.add(RenderConfig, 'renderOnCanvas').onFinishChange(onFinishChange)
-gui.add(RenderConfig, 'addFile')
 
 // Noise
 var f1 = gui.addFolder('Noise');
@@ -63,6 +66,12 @@ f2.add(RenderConfig, 'pathInterval').min(0.1).max(10).step(0.1).onChange(onConfi
 f2.add(RenderConfig, 'pathLength').min(0).max(1000).step(10).onChange(onConfigChange).onFinishChange(onFinishChange)
 f2.add(RenderConfig, 'pathDensity').min(0.01).max(10).step(0.01).onChange(onConfigChange).onFinishChange(onFinishChange)
 f2.open()
+
+// Import/Export
+var f3 = gui.addFolder('Import/Export');
+f3.add(RenderConfig, 'addFile')
+f3.add(RenderConfig, 'name')
+f3.add(RenderConfig, 'export')
 
 /**************************
  Config
@@ -149,6 +158,10 @@ function initDirectionLayer() {
 
 }
 
+/**************************
+ Rendering
+ **************************/
+
 function render() {
   if (drawLayer == null) {return false;}
   if (isRendering) {return false;}
@@ -219,6 +232,10 @@ function render() {
   isRendering = false
   paper.view.update()
 }
+
+/**************************
+ Directions utils
+ **************************/
 
 function getSortedDirections(pathToFollow) {
   var sortedDirections = directionLayer.children.slice()
@@ -302,4 +319,13 @@ function getDirectionAtOffset(offset, directions, pathLength) {
 
 function directionRelativeToMax(direction, maxDirection) {
   return [direction[0] / maxDirection[0] || 0, direction[1] / maxDirection[1] || 0]
+}
+
+/**************************
+ Export
+ **************************/
+
+function exportSVG() {
+  var blob = new Blob([paper.project.exportSVG({asString: true})], {type: "text/plain;charset=utf-8"})
+  saveAs(blob, RenderConfig.name)
 }
