@@ -70,7 +70,7 @@ f2.open()
 
 var processing = new Processing()
   , canvas = document.getElementById('paper-canvas')
-  , pathToFollow = null
+  , pathsToFollow = []
   , drawLayer = null
   , isRendering = false
   , directionLayer = null
@@ -93,7 +93,7 @@ function onImportDone() {
   paper.project.layers[0].addChildren(svgChildren)
 
   // Alias
-  pathToFollow = paper.project.layers[0].children[0]
+  pathsToFollow = paper.project.layers[0].children.slice()
 
   // Create a draw layer
   drawLayer = new paper.Layer()
@@ -113,7 +113,16 @@ function initDirectionLayer() {
   paper.tool.onMouseDown = function(ev) {
     directionLayer.activate()
 
-    var from = pathToFollow.getNearestPoint(ev.point)
+    var minDistance = Infinity
+      , from = null
+
+    pathsToFollow.forEach(function(path) {
+      if (ev.point.getDistance(path.getNearestPoint(ev.point)) < minDistance) {
+        from = path.getNearestPoint(ev.point)
+        minDistance = ev.point.getDistance(from)
+      }
+    })
+
     lastPath = paper.Path.Line(from, from)
     lastPath.strokeColor = 'red'
   }
@@ -148,58 +157,68 @@ function render() {
   // Clear draw layer
   drawLayer.removeChildren()
 
-  // Directional Vectors
-  directions = getSortedDirections()
-  maxDirection = getMaxDirection(directions)
+  pathsToFollow.forEach(function(pathToFollow) {
+    // Directional Vectors
+    var directions = getSortedDirections(pathToFollow)
+      , maxDirection = getMaxDirection(directions)
+    // Other variables
+      , perlinPath
+      , lastPoint
+      , vectorX
+      , vectorY
+      , normalPath
 
-  var perlinPath, lastPoint, vectorX, vectorY, normalPath
+    for (var offset = 0; offset < pathToFollow.length; offset += RenderConfig.pathInterval) {
+      perlinPath = new paper.Path()
+      perlinPath.strokeColor = 'black';
+      lastPoint = pathToFollow.getPointAt(offset)
 
-  for (var offset = 0; offset < pathToFollow.length; offset += RenderConfig.pathInterval) {
-    perlinPath = new paper.Path()
-    perlinPath.strokeColor = 'black';
-    lastPoint = pathToFollow.getPointAt(offset)
+      if (RenderConfig.renderOnCanvas) {
+        lastPoint.x = Math.floor(Math.random() * paper.view.size.width)
+        lastPoint.y = Math.floor(Math.random() * paper.view.size.height)
+      }
 
-    if (RenderConfig.renderOnCanvas) {
-      lastPoint.x = Math.floor(Math.random() * paper.view.size.width)
-      lastPoint.y = Math.floor(Math.random() * paper.view.size.height)
+      // // Point
+      // new paper.Path.Circle({
+      //   center: pathToFollow.getPointAt(offset),
+      //   radius: 3,
+      //   fillColor: 'red'
+      // });
+
+      // normalPath = new paper.Path.Line(pathToFollow.getPointAt(offset), pathToFollow.getPointAt(offset).add(pathToFollow.getNormalAt(offset)));
+      // normalPath.strokeColor = 'blue';
+
+      var startPoint = pathToFollow.getPointAt(offset)
+        , direction = getDirectionAtOffset(offset, directions, pathToFollow.length)
+        , directionRelative = directionRelativeToMax(direction, maxDirection)
+      //   , directionPath = paper.Path.Line(startPoint, startPoint.add(direction))
+      // directionPath.strokeColor = 'green'
+
+      for (var step = 0; step < RenderConfig.pathLength; step ++) {
+        perlinPath.add(lastPoint)
+
+        vectorX = Math.cos(processing.noise(lastPoint.x*RenderConfig.noiseDetalisation,lastPoint.y*RenderConfig.noiseDetalisation) * 2 * Math.PI) * RenderConfig.pathDensity;
+        vectorY = -Math.sin(processing.noise(lastPoint.x*RenderConfig.noiseDetalisation,lastPoint.y*RenderConfig.noiseDetalisation) * 2 * Math.PI) * RenderConfig.pathDensity;
+        // lastPoint = lastPoint.add([vectorX, vectorY])
+        lastPoint = lastPoint.add([directionRelative[0] * (1 - RenderConfig.noiseEffect) + vectorX * RenderConfig.noiseEffect, directionRelative[1] * (1 - RenderConfig.noiseEffect) + vectorY * RenderConfig.noiseEffect])
+      }
+
+      // Simplify path
+      perlinPath.simplify()
     }
+  })
 
-    // // Point
-    // new paper.Path.Circle({
-    //   center: pathToFollow.getPointAt(offset),
-    //   radius: 3,
-    //   fillColor: 'red'
-    // });
-
-    // normalPath = new paper.Path.Line(pathToFollow.getPointAt(offset), pathToFollow.getPointAt(offset).add(pathToFollow.getNormalAt(offset)));
-    // normalPath.strokeColor = 'blue';
-
-    var startPoint = pathToFollow.getPointAt(offset)
-      , direction = getDirectionAtOffset(offset, directions)
-      , directionRelative = directionRelativeToMax(direction, maxDirection)
-    //   , directionPath = paper.Path.Line(startPoint, startPoint.add(direction))
-    // directionPath.strokeColor = 'green'
-
-    for (var step = 0; step < RenderConfig.pathLength; step ++) {
-      perlinPath.add(lastPoint)
-
-      vectorX = Math.cos(processing.noise(lastPoint.x*RenderConfig.noiseDetalisation,lastPoint.y*RenderConfig.noiseDetalisation) * 2 * Math.PI) * RenderConfig.pathDensity;
-      vectorY = -Math.sin(processing.noise(lastPoint.x*RenderConfig.noiseDetalisation,lastPoint.y*RenderConfig.noiseDetalisation) * 2 * Math.PI) * RenderConfig.pathDensity;
-      // lastPoint = lastPoint.add([vectorX, vectorY])
-      lastPoint = lastPoint.add([directionRelative[0] * (1 - RenderConfig.noiseEffect) + vectorX * RenderConfig.noiseEffect, directionRelative[1] * (1 - RenderConfig.noiseEffect) + vectorY * RenderConfig.noiseEffect])
-    }
-
-    // Simplify path
-    perlinPath.simplify()
-  }
 
   // Unlock
   isRendering = false
   paper.view.update()
 }
 
-function getSortedDirections() {
+function getSortedDirections(pathToFollow) {
   var sortedDirections = directionLayer.children.slice()
+  .filter(function(path) {
+    return pathToFollow.hitTest(path.firstSegment.point) != null
+  })
   .map(function(path) {
     // Cache path offset from path to follow
     path.offset = pathToFollow.getOffsetOf(path.firstSegment.point)
@@ -228,7 +247,7 @@ paper.Path.prototype.getVector = function() {
   return [(this.lastSegment.point.x - this.firstSegment.point.x), (this.lastSegment.point.y - this.firstSegment.point.y)]
 }
 
-function getDirectionAtOffset(offset, directions) {
+function getDirectionAtOffset(offset, directions, pathLength) {
   var fromDirection = null
     , toDirection = null
     , relativePosition = 0
@@ -260,12 +279,12 @@ function getDirectionAtOffset(offset, directions) {
   if (toDirection.offset > fromDirection.offset) {
     relativePosition = (offset - fromDirection.offset) / (toDirection.offset - fromDirection.offset)
   } else {
-    var directionsDistance = pathToFollow.length - fromDirection.offset + toDirection.offset
+    var directionsDistance = pathLength - fromDirection.offset + toDirection.offset
 
     if (offset >= fromDirection.offset) {
       relativePosition = (offset - fromDirection.offset) / directionsDistance
     } else {
-      relativePosition = (offset - fromDirection.offset + pathToFollow.length) / directionsDistance
+      relativePosition = (offset - fromDirection.offset + pathLength) / directionsDistance
     }
   }
 
