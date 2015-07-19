@@ -13,6 +13,15 @@
     width: 100%;
     height: 100%;
   }
+  #alert{
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: #FF9999;
+    color: black;
+    font-size: 12px;
+    padding: 4px 8px;
+  }
   </style>
 </head>
 <body>
@@ -20,6 +29,7 @@
   <div style="width: 0; height: 0;">
     <form action=""><input type="file" id="file-input"></form>
   </div>
+  <div id="alert">Processing</div>
   <script src="js/dat.gui.js"></script>
   <script src="js/paper-full.js"></script>
   <script src="js/processing.js"></script>
