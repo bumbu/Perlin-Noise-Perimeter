@@ -14,7 +14,7 @@ var RenderConfig = {
 
 , pathInterval: 5
 , pathLength: 70
-, pathDensity: 1
+, pathPointDistance: 1
 
 , addFile: function() {
     $('#file-input').click()
@@ -64,7 +64,7 @@ f1.open()
 var f2 = gui.addFolder('Paths');
 f2.add(RenderConfig, 'pathInterval').min(0.1).max(10).step(0.1).onChange(onConfigChange).onFinishChange(onFinishChange)
 f2.add(RenderConfig, 'pathLength').min(0).max(1000).step(10).onChange(onConfigChange).onFinishChange(onFinishChange)
-f2.add(RenderConfig, 'pathDensity').min(0.01).max(10).step(0.01).onChange(onConfigChange).onFinishChange(onFinishChange)
+f2.add(RenderConfig, 'pathPointDistance').min(0.01).max(10).step(0.01).onChange(onConfigChange).onFinishChange(onFinishChange)
 f2.open()
 
 // Import/Export
@@ -228,8 +228,8 @@ function render() {
         for (var step = 0; step < RenderConfig.pathLength; step ++) {
           perlinPath.add(lastPoint)
 
-          vectorX = Math.cos(processing.noise(lastPoint.x*RenderConfig.noiseDetalisation,lastPoint.y*RenderConfig.noiseDetalisation) * 2 * Math.PI) * RenderConfig.pathDensity;
-          vectorY = -Math.sin(processing.noise(lastPoint.x*RenderConfig.noiseDetalisation,lastPoint.y*RenderConfig.noiseDetalisation) * 2 * Math.PI) * RenderConfig.pathDensity;
+          vectorX = Math.cos(processing.noise(lastPoint.x*RenderConfig.noiseDetalisation,lastPoint.y*RenderConfig.noiseDetalisation) * 2 * Math.PI) * RenderConfig.pathPointDistance;
+          vectorY = -Math.sin(processing.noise(lastPoint.x*RenderConfig.noiseDetalisation,lastPoint.y*RenderConfig.noiseDetalisation) * 2 * Math.PI) * RenderConfig.pathPointDistance;
           // lastPoint = lastPoint.add([vectorX, vectorY])
           lastPoint = lastPoint.add([directionRelative[0] * (1 - RenderConfig.noiseEffect) + vectorX * RenderConfig.noiseEffect, directionRelative[1] * (1 - RenderConfig.noiseEffect) + vectorY * RenderConfig.noiseEffect])
         }
