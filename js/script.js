@@ -10,6 +10,7 @@ var RenderConfig = {
 , noiseFalloff: 0.44
 , noiseSeed: 100
 , noiseDetalisation: 0.004
+, noiseEffect: 0.3
 
 , pathInterval: 5
 , pathLength: 70
@@ -40,6 +41,7 @@ f1.add(RenderConfig, 'noiseOctaves').min(1).max(10).step(1).onChange(onConfigCha
 f1.add(RenderConfig, 'noiseFalloff').min(0).max(1).step(0.01).onChange(onConfigChange).onFinishChange(onFinishChange)
 f1.add(RenderConfig, 'noiseSeed').min(0).max(65000).onChange(onConfigChange).onFinishChange(onFinishChange)
 f1.add(RenderConfig, 'noiseDetalisation').min(0).max(0.2).step(0.001).onChange(onConfigChange).onFinishChange(onFinishChange)
+f1.add(RenderConfig, 'noiseEffect').min(0).max(1).step(0.01).onChange(onConfigChange).onFinishChange(onFinishChange)
 f1.open()
 
 // Path
@@ -159,10 +161,8 @@ function render() {
     var startPoint = pathToFollow.getPointAt(offset)
       , direction = getDirectionAtOffset(offset, directions)
       , directionRelative = directionRelativeToMax(direction, maxDirection)
-      // , directionPath = paper.Path.Line(startPoint, startPoint.add(direction))
+    //   , directionPath = paper.Path.Line(startPoint, startPoint.add(direction))
     // directionPath.strokeColor = 'green'
-    console.log(directionRelative)
-
 
     for (var step = 0; step < RenderConfig.pathLength; step ++) {
       perlinPath.add(lastPoint)
@@ -170,7 +170,7 @@ function render() {
       vectorX = Math.cos(processing.noise(lastPoint.x*RenderConfig.noiseDetalisation,lastPoint.y*RenderConfig.noiseDetalisation) * 2 * Math.PI) * RenderConfig.pathDensity;
       vectorY = -Math.sin(processing.noise(lastPoint.x*RenderConfig.noiseDetalisation,lastPoint.y*RenderConfig.noiseDetalisation) * 2 * Math.PI) * RenderConfig.pathDensity;
       // lastPoint = lastPoint.add([vectorX, vectorY])
-      lastPoint = lastPoint.add([directionRelative[0] + vectorX * 0.3, directionRelative[1] + vectorY * 0.3])
+      lastPoint = lastPoint.add([directionRelative[0] * (1 - RenderConfig.noiseEffect) + vectorX * RenderConfig.noiseEffect, directionRelative[1] * (1 - RenderConfig.noiseEffect) + vectorY * RenderConfig.noiseEffect])
     }
 
     // Simplify path
