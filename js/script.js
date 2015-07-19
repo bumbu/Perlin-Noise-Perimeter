@@ -16,8 +16,8 @@ var RenderConfig = {
 , pathLength: 70
 , pathDensity: 1
 
-, onChange: function() {
-    console.log(arguments)
+, addFile: function() {
+    $('#file-input').click()
   }
 }
 
@@ -31,9 +31,22 @@ function onFinishChange() {
   render()
 }
 
+
+$('#file-input').on('change', function(ev) {
+  var reader = new FileReader()
+  reader.onloadend = function(ev) {
+    paper.project.clear()
+    paper.project.importSVG(ev.target.result)
+    onImportDone()
+  }
+
+  reader.readAsText(this.files.item(0))
+})
+
 var gui = new dat.GUI()
 gui.add(RenderConfig, 'updateOnEachChange')
 gui.add(RenderConfig, 'renderOnCanvas').onFinishChange(onFinishChange)
+gui.add(RenderConfig, 'addFile')
 
 // Noise
 var f1 = gui.addFolder('Noise');
@@ -64,9 +77,12 @@ var processing = new Processing()
 
 paper.setup(canvas);
 
-paper.project.importSVG('images/fish.svg', function() {
+paper.project.importSVG('images/multiple2.svg', function() {
   paper.view.draw();
+  onImportDone()
+})
 
+function onImportDone() {
   // Remove svg children
   var svgChildren = paper.project.layers[0].children[0].removeChildren()
 
@@ -84,7 +100,7 @@ paper.project.importSVG('images/fish.svg', function() {
 
   initDirectionLayer()
   render()
-})
+}
 
 function initDirectionLayer() {
   // Create direction layer
@@ -179,7 +195,7 @@ function render() {
 
   // Unlock
   isRendering = false
-  paper.view.update(true);
+  paper.view.update()
 }
 
 function getSortedDirections() {
