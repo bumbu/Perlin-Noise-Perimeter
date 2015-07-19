@@ -2,7 +2,7 @@
  Config
  **************************/
 
-var RenderConfig = {
+var RenderConfigDefaults = {
   updateOnEachChange: false
 , renderOnCanvas: false
 , zoom: 1
@@ -20,11 +20,38 @@ var RenderConfig = {
 , addFile: function() {
     $('#file-input').click()
   }
+, name: 'demo.svg'
 , export: function() {
     exportSVG()
   }
-, name: 'demo.svg'
+, resetToDefaults: function() {
+    // Copy all setting from defaults
+    for (var key in RenderConfigDefaults) {
+      RenderConfig[key] = RenderConfigDefaults[key]
+    }
+
+    // Save to local storage
+    saveConfig()
+
+    // Update gui
+    for (var i in gui.__controllers) {
+      gui.__controllers[i].updateDisplay()
+    }
+    for (var folder in gui.__folders) {
+      for (i in gui.__folders[folder].__controllers) {
+        gui.__folders[folder].__controllers[i].updateDisplay()
+      }
+    }
+  }
 }
+
+var RenderConfig = {}
+for (var key in RenderConfigDefaults) {
+  RenderConfig[key] = RenderConfigDefaults[key]
+}
+
+// Preload cached data
+loadConfig()
 
 function onConfigChange() {
   if (RenderConfig.updateOnEachChange) {
@@ -34,10 +61,12 @@ function onConfigChange() {
 
 function onFinishChange() {
   render()
+  saveConfig()
 }
 
 function onZoomUpdate() {
   paper.view.zoom = RenderConfig.zoom
+  saveConfig()
 }
 
 $('#file-input').on('change', function(ev) {
@@ -77,6 +106,39 @@ var f3 = gui.addFolder('Import/Export');
 f3.add(RenderConfig, 'addFile')
 f3.add(RenderConfig, 'name')
 f3.add(RenderConfig, 'export')
+f3.add(RenderConfig, 'resetToDefaults')
+
+/**************************
+ Config save/load
+ **************************/
+
+function getStorableConfig() {
+  var obj = {}
+  for (var key in RenderConfig) {
+    if (typeof RenderConfig[key] != 'function') {
+      obj[key] = RenderConfig[key]
+    }
+  }
+
+  return obj
+}
+
+function saveConfig() {
+  if (window.localStorage) {
+    localStorage.setItem('render-config', JSON.stringify(getStorableConfig()))
+  }
+}
+
+function loadConfig() {
+  if (window.localStorage && localStorage.hasOwnProperty('render-config')) {
+    var StoredConfig = JSON.parse(localStorage['render-config'])
+    for (var key in StoredConfig) {
+      if (RenderConfig.hasOwnProperty(key)) {
+        RenderConfig[key] = StoredConfig[key]
+      }
+    }
+  }
+}
 
 /**************************
  Config
