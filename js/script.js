@@ -17,6 +17,16 @@ var RenderConfigDefaults = {
 , pathLength: 70
 , pathPointDistance: 1
 
+, removeDirection: function() {
+    if (!nextClickWillRemoveADirection) {
+      nextClickWillRemoveADirection = true
+      showMessage()
+    } else {
+      nextClickWillRemoveADirection = false
+      hideMessage()
+    }
+  }
+
 , addFile: function() {
     $('#file-input').click()
   }
@@ -100,6 +110,11 @@ f2.add(RenderConfig, 'pathInterval').min(0.1).max(10).step(0.1).onChange(onConfi
 f2.add(RenderConfig, 'pathLength').min(0).max(1000).step(10).onChange(onConfigChange).onFinishChange(onFinishChange)
 f2.add(RenderConfig, 'pathPointDistance').min(0.01).max(10).step(0.01).onChange(onConfigChange).onFinishChange(onFinishChange)
 f2.open()
+
+// Direction
+var f4 = gui.addFolder('Directions')
+f4.add(RenderConfig, 'removeDirection')
+f4.open()
 
 // Import/Export
 var f3 = gui.addFolder('Import/Export');
@@ -199,6 +214,17 @@ function onImportDone() {
   render()
 }
 
+var nextClickWillRemoveADirection = false
+  , $message = document.getElementById('message')
+
+function showMessage() {
+  $message.style.display = null
+}
+
+function hideMessage() {
+  $message.style.display = 'none'
+}
+
 function initDirectionLayer() {
   // Create direction layer
   directionLayer = new paper.Layer()
@@ -207,7 +233,7 @@ function initDirectionLayer() {
 
   var lastPath = null
 
-  paper.tool.onMouseDown = function(ev) {
+  function startPath(ev) {
     directionLayer.activate()
 
     var minDistance = Infinity
@@ -222,6 +248,35 @@ function initDirectionLayer() {
 
     lastPath = paper.Path.Line(from, from)
     lastPath.strokeColor = 'red'
+  }
+
+  function removeDirection(ev) {
+    // Find nearest path
+    var minDistance = Infinity
+      , direction = null
+
+    directionLayer.children.forEach(function(path) {
+      if (ev.point.getDistance(path.getNearestPoint(ev.point)) < minDistance) {
+        direction = path
+        minDistance = ev.point.getDistance(path.getNearestPoint(ev.point))
+      }
+    })
+
+    nextClickWillRemoveADirection = false
+    hideMessage()
+
+    if (direction) {
+      direction.remove()
+      render()
+    }
+  }
+
+  paper.tool.onMouseDown = function(ev) {
+    if (nextClickWillRemoveADirection) {
+      removeDirection(ev)
+    } else {
+      startPath(ev)
+    }
   }
 
   paper.tool.onMouseMove = function(ev) {
