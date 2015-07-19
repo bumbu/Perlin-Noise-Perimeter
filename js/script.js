@@ -101,13 +101,19 @@ function onProcessingDone() {
 }
 
 function onImportDone() {
-  // Remove svg children. Transform shapes into paths
-  var svgChildren = paper.project.layers[0].children[0].removeChildren().map(function(child) {
+  // Remove svg children
+  var svgChildren = paper.project.layers[0].children[0].removeChildren()
+  // Transform shapes into paths
+  .map(function(child) {
     if (child instanceof paper.Shape) {
       return child.toPath(false)
     } else {
       return child
     }
+  })
+  // Remove paths with less than 2 segments
+  .filter(function(path) {
+    return path.segments.length >= 2
   })
 
   // Remove SVG empty group
