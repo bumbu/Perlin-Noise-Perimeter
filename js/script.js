@@ -77,14 +77,20 @@ var processing = new Processing()
 
 paper.setup(canvas);
 
-paper.project.importSVG('images/multiple2.svg', function() {
+paper.project.importSVG('images/multiple.svg', function() {
   paper.view.draw();
   onImportDone()
 })
 
 function onImportDone() {
-  // Remove svg children
-  var svgChildren = paper.project.layers[0].children[0].removeChildren()
+  // Remove svg children. Transform shapes into paths
+  var svgChildren = paper.project.layers[0].children[0].removeChildren().map(function(child) {
+    if (child instanceof paper.Shape) {
+      return child.toPath(false)
+    } else {
+      return child
+    }
+  })
 
   // Remove SVG empty group
   paper.project.layers[0].removeChildren()
