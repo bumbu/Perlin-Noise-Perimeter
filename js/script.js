@@ -12,11 +12,14 @@ var RenderConfigDefaults = {
 , noiseFalloff: 0.44
 , noiseSeed: 100
 , noiseDetalisation: 0.004
-, noiseEffect: 0.3
+, noiseRotation: 360
+, noiseIntensity: 3
 
 , pathInterval: 5
-, pathLength: 70
-, pathPointDistance: 1
+, pathPoints: 30
+, pathPointDistance: 6
+
+, directionIntensity: 0.5
 
 , addFile: function() {
     $('#file-input').click()
@@ -111,19 +114,21 @@ f1.add(RenderConfig, 'noiseOctaves').min(1).max(10).step(1).onChange(onConfigCha
 f1.add(RenderConfig, 'noiseFalloff').min(0).max(1).step(0.01).onChange(onConfigChange).onFinishChange(onFinishChange)
 f1.add(RenderConfig, 'noiseSeed').min(0).max(65000).onChange(onConfigChange).onFinishChange(onFinishChange)
 f1.add(RenderConfig, 'noiseDetalisation').min(0).max(0.2).step(0.001).onChange(onConfigChange).onFinishChange(onFinishChange)
-f1.add(RenderConfig, 'noiseEffect').min(0).max(1).step(0.01).onChange(onConfigChange).onFinishChange(onFinishChange)
+f1.add(RenderConfig, 'noiseRotation').min(0).max(360).step(10).onChange(onConfigChange).onFinishChange(onFinishChange)
+f1.add(RenderConfig, 'noiseIntensity').min(0.1).max(10).step(0.1).onChange(onConfigChange).onFinishChange(onFinishChange)
 f1.open()
 
 // Path
 var f2 = gui.addFolder('Paths');
 f2.add(RenderConfig, 'pathInterval').min(0.1).max(10).step(0.1).onChange(onConfigChange).onFinishChange(onFinishChange)
-f2.add(RenderConfig, 'pathLength').min(0).max(1000).step(10).onChange(onConfigChange).onFinishChange(onFinishChange)
+f2.add(RenderConfig, 'pathPoints').min(0).max(1000).step(10).onChange(onConfigChange).onFinishChange(onFinishChange)
 f2.add(RenderConfig, 'pathPointDistance').min(0.01).max(10).step(0.01).onChange(onConfigChange).onFinishChange(onFinishChange)
 f2.open()
 
 // Direction
-// var f4 = gui.addFolder('Directions')
-// f4.open()
+var f4 = gui.addFolder('Directions')
+f4.add(RenderConfig, 'directionIntensity').min(0).max(1).step(0.01).onChange(onConfigChange).onFinishChange(onFinishChange)
+f4.open()
 
 // Import/Export
 var f3 = gui.addFolder('Import/Export');
@@ -351,6 +356,8 @@ function render() {
         , vectorX
         , vectorY
         , normalPath
+        , finalX
+        , finalY
 
       for (var offset = 0; offset < pathToFollow.length; offset += RenderConfig.pathInterval) {
         perlinPath = new paper.Path()
@@ -375,23 +382,27 @@ function render() {
         var startPoint = pathToFollow.getPointAt(offset)
           , direction = getDirectionAtOffset(offset, directions, pathToFollow.length)
           , directionRelative = directionRelativeToMax(direction, maxDirection)
+          , noiseRotation = RenderConfig.noiseRotation || 360 // 0 == 360
         //   , directionPath = paper.Path.Line(startPoint, startPoint.add(direction))
         // directionPath.strokeColor = 'green'
 
-        for (var step = 0; step < RenderConfig.pathLength; step ++) {
+        for (var step = 0; step < RenderConfig.pathPoints; step ++) {
           perlinPath.add(lastPoint)
 
-          vectorX = Math.cos(processing.noise(lastPoint.x*RenderConfig.noiseDetalisation,lastPoint.y*RenderConfig.noiseDetalisation) * 2 * Math.PI) * RenderConfig.pathPointDistance;
-          vectorY = -Math.sin(processing.noise(lastPoint.x*RenderConfig.noiseDetalisation,lastPoint.y*RenderConfig.noiseDetalisation) * 2 * Math.PI) * RenderConfig.pathPointDistance;
+          vectorX = Math.cos(RenderConfig.noiseIntensity * processing.noise(lastPoint.x*RenderConfig.noiseDetalisation,lastPoint.y*RenderConfig.noiseDetalisation) + (noiseRotation / 180) * Math.PI)
+          vectorY = -Math.sin(RenderConfig.noiseIntensity * processing.noise(lastPoint.x*RenderConfig.noiseDetalisation,lastPoint.y*RenderConfig.noiseDetalisation) + (noiseRotation / 180) * Math.PI)
           // lastPoint = lastPoint.add([vectorX, vectorY])
-          lastPoint = lastPoint.add([directionRelative[0] * (1 - RenderConfig.noiseEffect) + vectorX * RenderConfig.noiseEffect, directionRelative[1] * (1 - RenderConfig.noiseEffect) + vectorY * RenderConfig.noiseEffect])
+          // console.log(directionRelative)
+          // console.log([directionRelative[0] * RenderConfig.directionIntensity + vectorX * (1 - RenderConfig.directionIntensity), directionRelative[1] * RenderConfig.directionIntensity + vectorY * (1 - RenderConfig.directionIntensity)])
+          finalX = (directionRelative[0] * RenderConfig.directionIntensity + vectorX * (1 - RenderConfig.directionIntensity)) * RenderConfig.pathPointDistance
+          finalY = (directionRelative[1] * RenderConfig.directionIntensity + vectorY * (1 - RenderConfig.directionIntensity)) * RenderConfig.pathPointDistance
+          lastPoint = lastPoint.add([finalX, finalY])
         }
 
         // Simplify path
         perlinPath.simplify()
       }
     })
-
 
     // Unlock
     isRendering = false
@@ -485,8 +496,10 @@ function getDirectionAtOffset(offset, directions, pathLength) {
   return [directionX, directionY]
 }
 
+// Compute against maxDirection max
 function directionRelativeToMax(direction, maxDirection) {
-  return [direction[0] / maxDirection[0] || 0, direction[1] / maxDirection[1] || 0]
+  var max = Math.max(maxDirection[0], maxDirection[1])
+  return [direction[0] / max || 0, direction[1] / max || 0]
 }
 
 /**************************
