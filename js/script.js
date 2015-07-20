@@ -6,6 +6,7 @@ var RenderConfigDefaults = {
   updateOnEachChange: false
 , renderOnCanvas: false
 , zoom: 1
+, action: 'drawDirection'
 
 , noiseOctaves: 8
 , noiseFalloff: 0.44
@@ -16,16 +17,6 @@ var RenderConfigDefaults = {
 , pathInterval: 5
 , pathLength: 70
 , pathPointDistance: 1
-
-, removeDirection: function() {
-    if (!nextClickWillRemoveADirection) {
-      nextClickWillRemoveADirection = true
-      showMessage()
-    } else {
-      nextClickWillRemoveADirection = false
-      hideMessage()
-    }
-  }
 
 , addFile: function() {
     $('#file-input').click()
@@ -74,9 +65,23 @@ function onFinishChange() {
   saveConfig()
 }
 
-function onZoomUpdate() {
+function onZoomChange() {
   paper.view.zoom = RenderConfig.zoom
   saveConfig()
+}
+
+function onActionChange() {
+  switch (RenderConfig.action) {
+    case 'drawDirection':
+      hideMessage()
+      break;
+    case 'removeDirection':
+      showMessage('Click on a direction to remove it')
+      break;
+    case 'pan':
+      showMessage('Pan')
+      break;
+  }
 }
 
 $('#file-input').on('change', function(ev) {
@@ -93,7 +98,12 @@ $('#file-input').on('change', function(ev) {
 var gui = new dat.GUI()
 gui.add(RenderConfig, 'updateOnEachChange')
 gui.add(RenderConfig, 'renderOnCanvas').onFinishChange(onFinishChange)
-gui.add(RenderConfig, 'zoom').min(0.01).max(5).step(0.01).onFinishChange(onZoomUpdate)
+gui.add(RenderConfig, 'zoom').min(0.01).max(5).step(0.01).onFinishChange(onZoomChange)
+gui.add(RenderConfig, 'action', {
+  'Draw directions': 'drawDirection'
+, 'Remove directions': 'removeDirection'
+, 'Pan': 'pan'
+}).onFinishChange(onActionChange)
 
 // Noise
 var f1 = gui.addFolder('Noise');
@@ -112,9 +122,8 @@ f2.add(RenderConfig, 'pathPointDistance').min(0.01).max(10).step(0.01).onChange(
 f2.open()
 
 // Direction
-var f4 = gui.addFolder('Directions')
-f4.add(RenderConfig, 'removeDirection')
-f4.open()
+// var f4 = gui.addFolder('Directions')
+// f4.open()
 
 // Import/Export
 var f3 = gui.addFolder('Import/Export');
@@ -214,10 +223,12 @@ function onImportDone() {
   render()
 }
 
-var nextClickWillRemoveADirection = false
-  , $message = document.getElementById('message')
+var $message = document.getElementById('message')
 
-function showMessage() {
+function showMessage(text) {
+  if (text != null) {
+    $message.innerHTML = text
+  }
   $message.style.display = null
 }
 
@@ -232,6 +243,7 @@ function initDirectionLayer() {
   new paper.Tool()
 
   var lastPath = null
+    , isPanning = false
 
   function startPath(ev) {
     directionLayer.activate()
@@ -272,10 +284,16 @@ function initDirectionLayer() {
   }
 
   paper.tool.onMouseDown = function(ev) {
-    if (nextClickWillRemoveADirection) {
-      removeDirection(ev)
-    } else {
-      startPath(ev)
+    switch (RenderConfig.action) {
+      case 'drawDirection':
+        startPath(ev)
+        break;
+      case 'removeDirection':
+        removeDirection(ev)
+        break;
+      case 'pan':
+        isPanning = true
+        break;
     }
   }
 
@@ -283,6 +301,11 @@ function initDirectionLayer() {
     if (lastPath != null) {
       lastPath.lastSegment.point = ev.point
     }
+
+    if (isPanning && ev.count % 2 == 1) {
+      paper.view.center = paper.view.center.add([-ev.delta.x, -ev.delta.y])
+    }
+
   }
 
   paper.tool.onMouseUp = function(ev) {
@@ -291,6 +314,8 @@ function initDirectionLayer() {
       lastPath = null
       render()
     }
+
+    isPanning = false
   }
 
 }
