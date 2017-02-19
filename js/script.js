@@ -197,8 +197,16 @@ function onProcessingDone() {
 }
 
 function onImportDone() {
-  // Remove svg children
+  var svgRectangleRemoved = false
   var svgChildren = paper.project.layers[0].children[0].removeChildren()
+  // Remove first rectangle which is the border of SVG
+  .filter(function(child) {
+    if (!svgRectangleRemoved && child instanceof paper.Shape && child.type === 'rectangle') {
+      svgRectangleRemoved = true
+      return false
+    }
+    return true
+  })
   // Transform shapes into paths
   .map(function(child) {
     if (child instanceof paper.Shape) {
