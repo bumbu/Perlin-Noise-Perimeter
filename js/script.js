@@ -182,7 +182,7 @@ var processing = new Processing()
 
 paper.setup(canvas);
 
-paper.project.importSVG('images/multiple.svg', function() {
+paper.project.importSVG('images/grouped.svg', function() {
   paper.view.draw();
   onImportDone()
 })
@@ -207,6 +207,8 @@ function onImportDone() {
     }
     return true
   })
+
+  svgChildren = unwrapGroups(svgChildren)
   // Transform shapes into paths
   .map(function(child) {
     if (child instanceof paper.Shape) {
@@ -214,6 +216,10 @@ function onImportDone() {
     } else {
       return child
     }
+  })
+  // Remove everything except paths
+  .filter(function(child) {
+    return child instanceof paper.Path
   })
   // Remove paths with less than 2 segments
   .filter(function(path) {
@@ -234,6 +240,19 @@ function onImportDone() {
 
   initDirectionLayer()
   render()
+}
+
+function unwrapGroups(children) {
+  var unwrapped = []
+  children.map(function(child) {
+    if (child instanceof paper.Group) {
+      unwrapped = unwrapped.concat(unwrapGroups(child.children))
+    } else {
+      unwrapped.push(child)
+    }
+  })
+
+  return unwrapped
 }
 
 var $message = document.getElementById('message')
