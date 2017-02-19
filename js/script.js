@@ -6,7 +6,7 @@ var RenderConfigDefaults = {
   updateOnEachChange: false
 , renderOnCanvas: false
 , zoom: 1
-, action: 'drawDirection'
+, action: 'pan'
 
 , noiseOctaves: 8
 , noiseFalloff: 0.44
