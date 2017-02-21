@@ -34,6 +34,7 @@ var RenderConfigDefaults = {
 , pathInterval: 5
 , pathPoints: 30
 , pathPointDistance: 6
+, pathStrokeWidth: 1
 
 , directionIntensity: 0.5
 , directionsVisible: true
@@ -142,6 +143,7 @@ var f2 = gui.addFolder('Paths');
 f2.add(RenderConfig, 'pathInterval').min(0.1).max(10).step(0.1).onChange(onConfigChange).onFinishChange(onFinishChange)
 f2.add(RenderConfig, 'pathPoints').min(0).max(1000).step(10).onChange(onConfigChange).onFinishChange(onFinishChange)
 f2.add(RenderConfig, 'pathPointDistance').min(0.01).max(10).step(0.01).onChange(onConfigChange).onFinishChange(onFinishChange)
+f2.add(RenderConfig, 'pathStrokeWidth').min(0.01).max(10).step(0.01).onChange(onConfigChange).onFinishChange(onFinishChange)
 f2.open()
 
 // Direction
@@ -419,6 +421,7 @@ function render() {
       for (var offset = 0; offset < pathToFollow.length; offset += RenderConfig.pathInterval) {
         perlinPath = new paper.Path()
         perlinPath.strokeColor = 'black';
+        perlinPath.strokeWidth = RenderConfig.pathStrokeWidth;
         lastPoint = pathToFollow.getPointAt(offset)
 
         if (RenderConfig.renderOnCanvas) {
