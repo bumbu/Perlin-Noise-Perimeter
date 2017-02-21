@@ -23,6 +23,7 @@ var RenderConfigDefaults = {
 , renderOnCanvas: false
 , zoom: 1
 , mode: 'pan'
+, originalArtVisible: true
 
 , noiseOctaves: 8
 , noiseFalloff: 0.44
@@ -126,7 +127,8 @@ gui.add(RenderConfig, 'mode', {
   'Draw directions': 'drawDirection'
 , 'Remove directions': 'removeDirection'
 , 'Pan': 'pan'
-}).onFinishChange(onModeChange)
+}).onFinishChange(function(){onModeChange();saveConfig();})
+gui.add(RenderConfig, 'originalArtVisible').onFinishChange(function(){onOriginalArtVisibleChange();onFinishChange();})
 
 // Noise
 var f1 = gui.addFolder('Noise');
@@ -198,6 +200,7 @@ function loadConfig() {
 var processing = new Processing()
   , canvas = document.getElementById('paper-canvas')
   , pathsToFollow = []
+  , originalLayer = null
   , drawLayer = null
   , isRendering = false
   , directionLayer = null
@@ -219,6 +222,7 @@ function onProcessingDone() {
 }
 
 function onImportDone() {
+  originalLayer = paper.project.activeLayer;
   var svgRectangleRemoved = false
   var svgChildren = paper.project.layers[0].children[0].removeChildren()
   // Remove first rectangle which is the border of SVG
@@ -260,6 +264,7 @@ function onImportDone() {
   // Create a draw layer
   drawLayer = new paper.Layer()
 
+  onOriginalArtVisibleChange()
   initDirectionLayer()
   render()
 }
@@ -277,6 +282,14 @@ function unwrapGroups(children) {
   return unwrapped
 }
 
+function onOriginalArtVisibleChange() {
+  if (RenderConfig.originalArtVisible) {
+    paper.project.insertLayer(0, originalLayer)
+  } else {
+    originalLayer.remove()
+  }
+}
+
 /**************************
  Directions
  **************************/
@@ -288,7 +301,6 @@ function onDirectionVisibilityChange() {
     directionLayer.remove()
   }
 }
-onDirectionVisibilityChange()
 
 function initDirectionLayer() {
   // Create direction layer
@@ -382,6 +394,8 @@ function initDirectionLayer() {
 
     isPanning = false
   }
+
+  onDirectionVisibilityChange()
 }
 
 /**************************
