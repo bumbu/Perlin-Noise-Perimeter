@@ -36,6 +36,7 @@ var RenderConfigDefaults = {
 , pathPointDistance: 6
 
 , directionIntensity: 0.5
+, directionsVisible: true
 
 , addFile: function() {
     $('#file-input').click()
@@ -146,6 +147,7 @@ f2.open()
 // Direction
 var f4 = gui.addFolder('Directions')
 f4.add(RenderConfig, 'directionIntensity').min(0).max(1).step(0.01).onChange(onConfigChange).onFinishChange(onFinishChange)
+f4.add(RenderConfig, 'directionsVisible').onFinishChange(function(){onDirectionVisibilityChange();onFinishChange();})
 f4.open()
 
 // Import/Export
@@ -273,6 +275,19 @@ function unwrapGroups(children) {
   return unwrapped
 }
 
+/**************************
+ Directions
+ **************************/
+
+function onDirectionVisibilityChange() {
+  if (RenderConfig.directionsVisible) {
+    paper.project.addLayer(directionLayer)
+  } else {
+    directionLayer.remove()
+  }
+}
+onDirectionVisibilityChange()
+
 function initDirectionLayer() {
   // Create direction layer
   directionLayer = new paper.Layer()
@@ -330,7 +345,6 @@ function initDirectionLayer() {
     switch (RenderConfig.mode) {
       case 'drawDirection':
         if (isRightClick(ev)) {
-          console.log('r')
           ev.preventDefault()
           removeDirection(ev)
         } else {
@@ -366,7 +380,6 @@ function initDirectionLayer() {
 
     isPanning = false
   }
-
 }
 
 /**************************
@@ -430,7 +443,7 @@ function render() {
         //   , directionPath = paper.Path.Line(startPoint, startPoint.add(direction))
         // directionPath.strokeColor = 'green'
 
-        for (var step = 0; step < RenderConfig.pathPoints; step ++) {
+        for (var step = 0; step < RenderConfig.pathPoints; step++) {
           perlinPath.add(lastPoint)
 
           vectorX = Math.cos(RenderConfig.noiseIntensity * processing.noise(lastPoint.x*RenderConfig.noiseDetalisation,lastPoint.y*RenderConfig.noiseDetalisation) + (noiseRotation / 180) * Math.PI)
