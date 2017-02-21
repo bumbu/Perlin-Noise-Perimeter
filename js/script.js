@@ -200,7 +200,7 @@ var processing = new Processing()
 
 paper.setup(canvas);
 
-paper.project.importSVG('images/grouped.svg', function() {
+paper.project.importSVG('images/letter.svg', function() {
   paper.view.draw();
   onImportDone()
 })
