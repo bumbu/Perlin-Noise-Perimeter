@@ -22,7 +22,7 @@ var RenderConfigDefaults = {
   updateOnEachChange: false
 , renderOnCanvas: false
 , zoom: 1
-, action: 'pan'
+, mode: 'pan'
 
 , noiseOctaves: 8
 , noiseFalloff: 0.44
@@ -89,9 +89,9 @@ function onZoomChange() {
   saveConfig()
 }
 
-function onActionChange() {
+function onModeChange() {
   // hideMessage()
-  switch (RenderConfig.action) {
+  switch (RenderConfig.mode) {
     case 'drawDirection':
       showMessage('Click and drag to create directions. Right click to remove a direction')
       break;
@@ -103,7 +103,7 @@ function onActionChange() {
       break;
   }
 }
-onActionChange()
+onModeChange()
 
 $('#file-input').on('change', function(ev) {
   var reader = new FileReader()
@@ -120,11 +120,11 @@ var gui = new dat.GUI()
 gui.add(RenderConfig, 'updateOnEachChange')
 gui.add(RenderConfig, 'renderOnCanvas').onFinishChange(onFinishChange)
 gui.add(RenderConfig, 'zoom').min(0.01).max(5).step(0.01).onFinishChange(onZoomChange)
-gui.add(RenderConfig, 'action', {
+gui.add(RenderConfig, 'mode', {
   'Draw directions': 'drawDirection'
 , 'Remove directions': 'removeDirection'
 , 'Pan': 'pan'
-}).onFinishChange(onActionChange)
+}).onFinishChange(onModeChange)
 
 // Noise
 var f1 = gui.addFolder('Noise');
@@ -327,7 +327,7 @@ function initDirectionLayer() {
   }
 
   paper.tool.onMouseDown = function(ev) {
-    switch (RenderConfig.action) {
+    switch (RenderConfig.mode) {
       case 'drawDirection':
         if (isRightClick(ev)) {
           console.log('r')
