@@ -19,25 +19,23 @@ function hideMessage() {
  **************************/
 
 var RenderConfigDefaults = {
-  updateOnEachChange: false
-, renderOnCanvas: false
+  mode: 'pan'
 , zoom: 1
-, mode: 'pan'
-, originalArtVisible: true
 
 , noiseOctaves: 8
-, noiseFalloff: 0.44
+, noiseFalloff: 0.4
 , noiseSeed: 100
-, noiseDetalisation: 0.004
+, noiseDetalisation: 0.02
 , noiseRotation: 360
-, noiseIntensity: 3
+, noiseIntensity: 3.5
 
-, pathInterval: 5
-, pathPoints: 30
-, pathPointDistance: 6
-, pathStrokeWidth: 1
+, pathInterval: 1
+, pathPoints: 15
+, pathPointDistance: 2
+, pathStrokeWidth: 0.3
 
-, directionIntensity: 0.5
+, updateOnEachChange: false
+, originalArtVisible: true
 , directionsVisible: true
 
 , addFile: function() {
@@ -120,15 +118,12 @@ $('#file-input').on('change', function(ev) {
 })
 
 var gui = new dat.GUI()
-gui.add(RenderConfig, 'updateOnEachChange')
-gui.add(RenderConfig, 'renderOnCanvas').onFinishChange(onFinishChange)
 gui.add(RenderConfig, 'zoom').min(0.01).max(5).step(0.01).onFinishChange(onZoomChange)
 gui.add(RenderConfig, 'mode', {
   'Draw directions': 'drawDirection'
 , 'Remove directions': 'removeDirection'
 , 'Pan': 'pan'
 }).onFinishChange(function(){onModeChange();saveConfig();})
-gui.add(RenderConfig, 'originalArtVisible').onFinishChange(function(){onOriginalArtVisibleChange();onFinishChange();})
 
 // Noise
 var f1 = gui.addFolder('Noise');
@@ -149,8 +144,9 @@ f2.add(RenderConfig, 'pathStrokeWidth').min(0.01).max(10).step(0.01).onChange(on
 f2.open()
 
 // Direction
-var f4 = gui.addFolder('Directions')
-f4.add(RenderConfig, 'directionIntensity').min(0).max(1).step(0.01).onChange(onConfigChange).onFinishChange(onFinishChange)
+var f4 = gui.addFolder('Options')
+f4.add(RenderConfig, 'updateOnEachChange')
+f4.add(RenderConfig, 'originalArtVisible').onFinishChange(function(){onOriginalArtVisibleChange();onFinishChange();})
 f4.add(RenderConfig, 'directionsVisible').onFinishChange(function(){onDirectionVisibilityChange();onFinishChange();})
 f4.open()
 
@@ -438,39 +434,38 @@ function render() {
         perlinPath.strokeWidth = RenderConfig.pathStrokeWidth;
         lastPoint = pathToFollow.getPointAt(offset)
 
-        if (RenderConfig.renderOnCanvas) {
-          lastPoint.x = Math.floor(Math.random() * paper.view.size.width)
-          lastPoint.y = Math.floor(Math.random() * paper.view.size.height)
-        }
-
-        // // Point
-        // new paper.Path.Circle({
-        //   center: pathToFollow.getPointAt(offset),
-        //   radius: 3,
-        //   fillColor: 'red'
-        // });
-
-        // normalPath = new paper.Path.Line(pathToFollow.getPointAt(offset), pathToFollow.getPointAt(offset).add(pathToFollow.getNormalAt(offset)));
-        // normalPath.strokeColor = 'blue';
-
-        var startPoint = pathToFollow.getPointAt(offset)
-          , direction = getDirectionAtOffset(offset, directions, pathToFollow.length)
-          , directionRelative = directionRelativeToMax(direction, maxDirection)
-          , noiseRotation = RenderConfig.noiseRotation || 360 // 0 == 360
-        //   , directionPath = paper.Path.Line(startPoint, startPoint.add(direction))
-        // directionPath.strokeColor = 'green'
+        var noiseRotation = RenderConfig.noiseRotation || 360 // 0 == 360
 
         for (var step = 0; step < RenderConfig.pathPoints; step++) {
           perlinPath.add(lastPoint)
 
           vectorX = Math.cos(RenderConfig.noiseIntensity * processing.noise(lastPoint.x*RenderConfig.noiseDetalisation,lastPoint.y*RenderConfig.noiseDetalisation) + (noiseRotation / 180) * Math.PI)
           vectorY = -Math.sin(RenderConfig.noiseIntensity * processing.noise(lastPoint.x*RenderConfig.noiseDetalisation,lastPoint.y*RenderConfig.noiseDetalisation) + (noiseRotation / 180) * Math.PI)
-          // lastPoint = lastPoint.add([vectorX, vectorY])
-          // console.log(directionRelative)
-          // console.log([directionRelative[0] * RenderConfig.directionIntensity + vectorX * (1 - RenderConfig.directionIntensity), directionRelative[1] * RenderConfig.directionIntensity + vectorY * (1 - RenderConfig.directionIntensity)])
-          finalX = (directionRelative[0] * RenderConfig.directionIntensity + vectorX * (1 - RenderConfig.directionIntensity)) * RenderConfig.pathPointDistance
-          finalY = (directionRelative[1] * RenderConfig.directionIntensity + vectorY * (1 - RenderConfig.directionIntensity)) * RenderConfig.pathPointDistance
+
+          finalX = vectorX * RenderConfig.pathPointDistance
+          finalY = vectorY * RenderConfig.pathPointDistance
           lastPoint = lastPoint.add([finalX, finalY])
+        }
+
+        var maxDirectionVector = new paper.Point(maxDirection)
+
+        if (maxDirectionVector.length > 0) {
+          var direction = getDirectionAtOffset(offset, directions, pathToFollow.length)
+          var directionVector = new paper.Point(direction)
+          var directionAngle = directionVector.angle
+          // Compute path direction based on first and 4th point
+          var pathStartPoint = perlinPath.getPointAt(0);
+          var pathDirectionPoint = perlinPath.getPointAt(3 * perlinPath.length / RenderConfig.pathPoints);
+          var pathDirection = pathDirectionPoint.subtract(pathStartPoint);
+          var pathCurrentAngle = pathDirection.angle;
+          var pathAngleDiff = (directionAngle - pathCurrentAngle);
+          perlinPath.rotate(pathAngleDiff, pathStartPoint);
+
+          // // Render direction
+          // var dirEnd = (new paper.Point(pathStartPoint)).add(direction)
+          // var dir = new paper.Path.Line(pathStartPoint, dirEnd)
+          // dir.strokeColor = 'green';
+          // dir.strokeWidth = 0.7;
         }
 
         // Simplify path
