@@ -13,7 +13,7 @@
     width: 100%;
     height: 100%;
   }
-  #alert, #message{
+  #alert, #message, #info{
     position: fixed;
     top: 0;
     left: 0;
@@ -25,9 +25,14 @@
   #message{
     background: #00CCCC;
   }
+  #info{
+    top: auto;
+    bottom: 0;
+    background: #00CCCC;
+  }
   </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
   <canvas id="paper-canvas" resize></canvas>
   <div style="width: 0; height: 0; overflow: hidden;">
     <form action=""><input type="file" id="file-input"></form>

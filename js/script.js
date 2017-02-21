@@ -1,4 +1,20 @@
 /**************************
+ Info messages
+ **************************/
+var $message = document.getElementById('message')
+
+function showMessage(text) {
+  if (text != null) {
+    $message.innerHTML = text
+  }
+  $message.style.display = null
+}
+
+function hideMessage() {
+  $message.style.display = 'none'
+}
+
+/**************************
  Config
  **************************/
 
@@ -74,9 +90,10 @@ function onZoomChange() {
 }
 
 function onActionChange() {
+  // hideMessage()
   switch (RenderConfig.action) {
     case 'drawDirection':
-      hideMessage()
+      showMessage('Click and drag to create directions. Right click to remove a direction')
       break;
     case 'removeDirection':
       showMessage('Click on a direction to remove it')
@@ -86,6 +103,7 @@ function onActionChange() {
       break;
   }
 }
+onActionChange()
 
 $('#file-input').on('change', function(ev) {
   var reader = new FileReader()
@@ -255,19 +273,6 @@ function unwrapGroups(children) {
   return unwrapped
 }
 
-var $message = document.getElementById('message')
-
-function showMessage(text) {
-  if (text != null) {
-    $message.innerHTML = text
-  }
-  $message.style.display = null
-}
-
-function hideMessage() {
-  $message.style.display = 'none'
-}
-
 function initDirectionLayer() {
   // Create direction layer
   directionLayer = new paper.Layer()
@@ -315,10 +320,22 @@ function initDirectionLayer() {
     }
   }
 
+  function isRightClick(ev) {
+    if (ev.event.which) return ev.event.which === 3;
+    if (ev.event.button) return ev.event.button === 2;
+    return false;
+  }
+
   paper.tool.onMouseDown = function(ev) {
     switch (RenderConfig.action) {
       case 'drawDirection':
-        startPath(ev)
+        if (isRightClick(ev)) {
+          console.log('r')
+          ev.preventDefault()
+          removeDirection(ev)
+        } else {
+          startPath(ev)
+        }
         break;
       case 'removeDirection':
         removeDirection(ev)
