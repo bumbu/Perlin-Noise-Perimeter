@@ -218,6 +218,7 @@ function onProcessingDone() {
 }
 
 function onImportDone() {
+  paper.view.zoom = RenderConfig.zoom
   originalLayer = paper.project.activeLayer;
   var svgRectangleRemoved = false
   var svgChildren = paper.project.layers[0].children[0].removeChildren()
