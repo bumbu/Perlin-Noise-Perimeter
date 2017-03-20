@@ -20,6 +20,9 @@ function hideMessage() {
 
 var RenderConfigDefaults = {
   mode: 'pan'
+
+, panX: 0
+, panY: 0
 , zoom: 1
 
 , noiseOctaves: 8
@@ -90,6 +93,29 @@ function onZoomChange() {
   saveConfig()
 }
 
+function onZoomChangeIntermediate() {
+  if (RenderConfig.updateOnEachChange) {
+    onZoomChange();
+  }
+}
+
+var prevPanX = 0;
+var prevPanY = 0;
+function onPanChange() {
+  var panXDiff = RenderConfig.panX - prevPanX;
+  var panYDiff = RenderConfig.panY - prevPanY;
+  paper.view.center = paper.view.center.add([panXDiff, panYDiff])
+  prevPanX = RenderConfig.panX;
+  prevPanY = RenderConfig.panY;
+  saveConfig()
+}
+
+function onPanChangeIntermediate() {
+  if (RenderConfig.updateOnEachChange) {
+    onPanChange();
+  }
+}
+
 function onModeChange() {
   // hideMessage()
   switch (RenderConfig.mode) {
@@ -118,12 +144,17 @@ $('#file-input').on('change', function(ev) {
 })
 
 var gui = new dat.GUI()
-gui.add(RenderConfig, 'zoom').min(0.01).max(5).step(0.01).onFinishChange(onZoomChange)
 gui.add(RenderConfig, 'mode', {
   'Draw directions': 'drawDirection'
 , 'Remove directions': 'removeDirection'
 , 'Pan': 'pan'
 }).onFinishChange(function(){onModeChange();saveConfig();})
+
+// Pan/Zoom
+var f0 = gui.addFolder('Pan/Zoom');
+var panXCtrl = f0.add(RenderConfig, 'panX').min(-1000).max(1000).step(1).onChange(onPanChangeIntermediate).onFinishChange(onPanChange)
+var panYCtrl = f0.add(RenderConfig, 'panY').min(-1000).max(1000).step(1).onChange(onPanChangeIntermediate).onFinishChange(onPanChange)
+f0.add(RenderConfig, 'zoom').min(0.01).max(5).step(0.01).onChange(onZoomChangeIntermediate).onFinishChange(onZoomChange)
 
 // Noise
 var f1 = gui.addFolder('Noise');
@@ -218,7 +249,8 @@ function onProcessingDone() {
 }
 
 function onImportDone() {
-  paper.view.zoom = RenderConfig.zoom
+  onZoomChange()
+  onPanChange()
   originalLayer = paper.project.activeLayer;
   var svgRectangleRemoved = false
   var svgChildren = paper.project.layers[0].children[0].removeChildren()
@@ -377,7 +409,8 @@ function initDirectionLayer() {
     }
 
     if (isPanning && ev.count % 2 == 1) {
-      paper.view.center = paper.view.center.add([-ev.delta.x, -ev.delta.y])
+      panXCtrl.setValue(panXCtrl.getValue() - ev.delta.x)
+      panYCtrl.setValue(panYCtrl.getValue() - ev.delta.y)
     }
 
   }
