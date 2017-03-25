@@ -110,12 +110,6 @@ function onPanChange() {
   saveConfig()
 }
 
-function onPanChangeIntermediate() {
-  if (RenderConfig.updateOnEachChange) {
-    onPanChange();
-  }
-}
-
 function onModeChange() {
   // hideMessage()
   switch (RenderConfig.mode) {
@@ -152,8 +146,8 @@ gui.add(RenderConfig, 'mode', {
 
 // Pan/Zoom
 var f0 = gui.addFolder('Pan/Zoom');
-var panXCtrl = f0.add(RenderConfig, 'panX').min(-1000).max(1000).step(1).onChange(onPanChangeIntermediate).onFinishChange(onPanChange)
-var panYCtrl = f0.add(RenderConfig, 'panY').min(-1000).max(1000).step(1).onChange(onPanChangeIntermediate).onFinishChange(onPanChange)
+var panXCtrl = f0.add(RenderConfig, 'panX').min(-1000).max(1000).step(1).onChange(onPanChange).onFinishChange(onPanChange)
+var panYCtrl = f0.add(RenderConfig, 'panY').min(-1000).max(1000).step(1).onChange(onPanChange).onFinishChange(onPanChange)
 f0.add(RenderConfig, 'zoom').min(0.01).max(5).step(0.01).onChange(onZoomChangeIntermediate).onFinishChange(onZoomChange)
 
 // Noise
