@@ -301,7 +301,7 @@ function onImportDone() {
 function unwrapGroups(children) {
   var unwrapped = []
   children.map(function(child) {
-    if (child instanceof paper.Group) {
+    if (child instanceof paper.Group || child instanceof paper.CompoundPath) {
       unwrapped = unwrapped.concat(unwrapGroups(child.children))
     } else {
       unwrapped.push(child)
