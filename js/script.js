@@ -232,6 +232,7 @@ paper.setup(canvas);
 paper.project.importSVG('images/letter.svg', function() {
   paper.view.draw();
   onImportDone()
+  loadInitialDirections();
 })
 
 var $alert = document.getElementById('alert')
@@ -291,6 +292,11 @@ function onImportDone() {
   onOriginalArtVisibleChange()
   initDirectionLayer()
   render()
+}
+
+// Loads a predefined set of directions
+function loadInitialDirections() {
+  directionLayer.importJSON('["Layer",{"applyMatrix":true,"children":[["Path",{"applyMatrix":true,"segments":[[406,402.8],[397,426]],"strokeColor":[1,0,0]}],["Path",{"applyMatrix":true,"segments":[[317.7,339],[337,353]],"strokeColor":[1,0,0]}],["Path",{"applyMatrix":true,"segments":[[258.6,158.4],[232,133]],"strokeColor":[1,0,0]}],["Path",{"applyMatrix":true,"segments":[[258.6,402.8],[245,420]],"strokeColor":[1,0,0]}],["Path",{"applyMatrix":true,"segments":[[317.6,272.4],[333,256]],"strokeColor":[1,0,0]}],["Path",{"applyMatrix":true,"segments":[[317.6,209.3],[338,227]],"strokeColor":[1,0,0]}],["Path",{"applyMatrix":true,"segments":[[399.3705864158,243.7891458047],[376,243]],"strokeColor":[1,0,0]}],["Path",{"applyMatrix":true,"segments":[[363.2900444981,340.5465927063],[359,363]],"strokeColor":[1,0,0]}],["Path",{"applyMatrix":true,"segments":[[428.5537763405,337.6610160651],[453,339]],"strokeColor":[1,0,0]}],["Path",{"applyMatrix":true,"segments":[[470,402.8],[484,424]],"strokeColor":[1,0,0]}],["Path",{"applyMatrix":true,"segments":[[455.6808366368,377.6117775923],[478,383]],"strokeColor":[1,0,0]}]]}]');
 }
 
 function unwrapGroups(children) {
