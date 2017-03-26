@@ -611,6 +611,7 @@ function directionRelativeToMax(direction, maxDirection) {
  **************************/
 
 function exportSVG() {
+  alert('Exporting may take a while, please be patient!')
   var blob = new Blob([paper.project.exportSVG({asString: true})], {type: "text/plain;charset=utf-8"})
   saveAs(blob, RenderConfig.name)
 }
