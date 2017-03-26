@@ -28,17 +28,17 @@ var RenderConfigDefaults = {
 , noiseOctaves: 8
 , noiseFalloff: 0.4
 , noiseSeed: 100
-, noiseDetalisation: 0.02
+, noiseDetalisation: 0.03
 , noiseRotation: 360
-, noiseIntensity: 3.5
+, noiseIntensity: 4.2
 
-, pathInterval: 1
+, pathInterval: 0.8
 , pathPoints: 15
 , pathPointDistance: 2
 , pathStrokeWidth: 0.3
 
 , updateOnEachChange: false
-, originalArtVisible: true
+, originalArtVisible: false
 , directionsVisible: true
 
 , addFile: function() {
