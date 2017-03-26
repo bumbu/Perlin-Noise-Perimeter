@@ -66,6 +66,7 @@ var RenderConfigDefaults = {
         gui.__folders[folder].__controllers[i].updateDisplay()
       }
     }
+    render()
   }
 }
 
