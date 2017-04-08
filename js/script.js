@@ -153,7 +153,7 @@ f0.add(RenderConfig, 'zoom').min(0.01).max(5).step(0.01).onChange(onZoomChangeIn
 
 // Noise
 var f1 = gui.addFolder('Noise');
-f1.add(RenderConfig, 'noiseOctaves').min(1).max(10).step(1).onChange(onConfigChange).onFinishChange(onFinishChange)
+f1.add(RenderConfig, 'noiseOctaves').min(1).max(128).step(1).onChange(onConfigChange).onFinishChange(onFinishChange)
 f1.add(RenderConfig, 'noiseFalloff').min(0).max(1).step(0.01).onChange(onConfigChange).onFinishChange(onFinishChange)
 f1.add(RenderConfig, 'noiseSeed').min(0).max(65000).onChange(onConfigChange).onFinishChange(onFinishChange)
 f1.add(RenderConfig, 'noiseDetalisation').min(0).max(0.2).step(0.001).onChange(onConfigChange).onFinishChange(onFinishChange)
