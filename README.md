@@ -2,6 +2,8 @@
 
 Draws perlin noise on SVG paths.
 
+More examples and description available on [bumbu.github.io/perlin-noise-perimeter-drawing-tool/](https://bumbu.github.io/perlin-noise-perimeter-drawing-tool/).
+
 <img src="https://bumbu.github.io/Perlin-Noise-Perimeter/demo/perlin-perimeter-demo-1.png" width="611" height="484" />
 
 ## How to use it:
